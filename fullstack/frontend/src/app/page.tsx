@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import Link from 'next/link'
+import ThemeToggle from '../components/ThemeToggle'
 
 interface Post {
   id: number
@@ -69,21 +70,24 @@ export default function Home() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700">
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               杨振的个人博客
             </h1>
-            <nav className="flex space-x-6">
-              <Link href="/" className="text-gray-600 hover:text-gray-900">首页</Link>
-              {typeof window !== 'undefined' && localStorage.getItem('auth_token') && (
-                <Link href="/admin" className="text-gray-600 hover:text-gray-900">管理后台</Link>
-              )}
-              <Link href="/about" className="text-gray-600 hover:text-gray-900">关于</Link>
-            </nav>
+            <div className="flex items-center space-x-6">
+              <nav className="flex space-x-6">
+                <Link href="/" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">首页</Link>
+                {typeof window !== 'undefined' && localStorage.getItem('auth_token') && (
+                  <Link href="/admin" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">管理后台</Link>
+                )}
+                <Link href="/about" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">关于</Link>
+              </nav>
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </header>
@@ -91,57 +95,57 @@ export default function Home() {
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">欢迎来到我的博客</h2>
-          <p className="text-gray-600">分享技术心得和项目经验</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">欢迎来到我的博客</h2>
+          <p className="text-gray-600 dark:text-gray-300">分享技术心得和项目经验</p>
         </div>
 
         {/* Posts Section */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">最新文章</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">最新文章</h2>
 
           {loading && (
             <div className="grid gap-6">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white rounded-lg shadow-sm border p-6 animate-pulse">
-                  <div className="h-6 bg-gray-200 rounded w-3/4 mb-3"></div>
-                  <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-6 animate-pulse">
+                  <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-3"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3 mb-4"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
                 </div>
               ))}
             </div>
           )}
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-              <p className="text-red-600">{error}</p>
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
+              <p className="text-red-600 dark:text-red-400">{error}</p>
             </div>
           )}
 
           {!loading && !error && posts.length === 0 && (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-              <p className="text-gray-600">暂无文章</p>
+            <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+              <p className="text-gray-600 dark:text-gray-300">暂无文章</p>
             </div>
           )}
 
           {!loading && !error && posts.length > 0 && (
             <div className="grid gap-6">
               {posts.map((post) => (
-                <article key={post.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3 hover:text-blue-600">
+                <article key={post.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-6 hover:shadow-md dark:hover:shadow-lg transition-shadow">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3 hover:text-blue-600 dark:hover:text-blue-400">
                     <Link href={`/posts/${post.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
                       {post.title}
                     </Link>
                   </h3>
-                  <p className="text-gray-600 mb-4 line-clamp-2">{post.excerpt}</p>
-                  <div className="flex items-center justify-between text-sm text-gray-500">
+                  <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">{post.excerpt}</p>
+                  <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                     <div>
                       {post.author && <span>作者: {post.author.username} • </span>}
                       <time>{new Date(post.createdAt).toLocaleDateString('zh-CN')}</time>
                     </div>
                     <Link
                       href={`/posts/${post.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
-                      className="text-blue-600 hover:text-blue-800"
+                      className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                     >
                       阅读更多 →
                     </Link>
@@ -154,8 +158,8 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t mt-12">
-        <div className="max-w-6xl mx-auto px-4 py-8 text-center text-gray-600">
+      <footer className="bg-white dark:bg-gray-800 border-t dark:border-gray-700 mt-12">
+        <div className="max-w-6xl mx-auto px-4 py-8 text-center text-gray-600 dark:text-gray-300">
           <p>&copy; 2024 杨振的个人博客. 所有权利保留.</p>
           <p className="mt-2 text-sm">Powered by Next.js + Railway API</p>
         </div>
