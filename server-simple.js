@@ -272,6 +272,59 @@ app.get('/api/posts', (req, res) => {
   }
 });
 
+// 创建文章 (需要认证)
+app.post('/api/posts', authenticateToken, async (req, res) => {
+  try {
+    const { title, content, excerpt, categoryId, tagIds } = req.body;
+
+    if (!title || !content) {
+      return res.status(400).json({ error: '标题和内容都是必需的' });
+    }
+
+    // 生成slug
+    const slug = title.toLowerCase()
+      .replace(/[^\u4e00-\u9fa5a-z0-9\s]/gi, '')
+      .replace(/\s+/g, '-');
+
+    // 确保slug唯一
+    let uniqueSlug = slug;
+    let counter = 1;
+    while (posts.find(p => p.slug === uniqueSlug)) {
+      uniqueSlug = `${slug}-${counter}`;
+      counter++;
+    }
+
+    const post = {
+      id: nextId.posts++,
+      title,
+      slug: uniqueSlug,
+      content,
+      excerpt: excerpt || content.substring(0, 150),
+      published: true,
+      authorId: req.user.userId,
+      views: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    posts.push(post);
+
+    const author = users.find(u => u.id === post.authorId);
+    const postWithDetails = {
+      ...post,
+      author: { id: author.id, username: author.username },
+      category: null,
+      tags: [],
+      _count: { comments: 0, likes: 0 }
+    };
+
+    res.status(201).json(postWithDetails);
+  } catch (error) {
+    console.error('创建文章错误:', error);
+    res.status(500).json({ error: '服务器内部错误', details: error.message });
+  }
+});
+
 // 获取单篇文章
 app.get('/api/posts/:slug', (req, res) => {
   try {
