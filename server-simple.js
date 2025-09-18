@@ -327,6 +327,75 @@ app.post('/api/posts', authenticateToken, async (req, res) => {
   }
 });
 
+// 更新文章 (需要认证)
+app.put('/api/posts/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, content, excerpt } = req.body;
+
+    if (!title || !content) {
+      return res.status(400).json({ error: '标题和内容都是必需的' });
+    }
+
+    const postIndex = posts.findIndex(p => p.id === parseInt(id));
+    if (postIndex === -1) {
+      return res.status(404).json({ error: '文章未找到' });
+    }
+
+    const post = posts[postIndex];
+
+    // 检查权限：只有作者或管理员可以编辑
+    if (post.authorId !== req.user.userId) {
+      const user = users.find(u => u.id === req.user.userId);
+      if (!user || user.role !== 'ADMIN') {
+        return res.status(403).json({ error: '没有权限编辑此文章' });
+      }
+    }
+
+    // 如果标题改变，重新生成slug
+    let newSlug = post.slug;
+    if (title !== post.title) {
+      const slug = title.toLowerCase()
+        .replace(/[^\w\s-]/g, '') // 只保留字母数字和空格连字符
+        .replace(/\s+/g, '-')     // 空格转连字符
+        .replace(/-+/g, '-')      // 多个连字符合并为一个
+        .replace(/^-|-$/g, '');   // 移除首尾连字符
+
+      // 确保slug唯一
+      newSlug = slug;
+      let counter = 1;
+      while (posts.find(p => p.slug === newSlug && p.id !== parseInt(id))) {
+        newSlug = `${slug}-${counter}`;
+        counter++;
+      }
+    }
+
+    // 更新文章
+    posts[postIndex] = {
+      ...post,
+      title,
+      slug: newSlug,
+      content,
+      excerpt: excerpt || content.substring(0, 150),
+      updatedAt: new Date().toISOString()
+    };
+
+    const author = users.find(u => u.id === posts[postIndex].authorId);
+    const postWithDetails = {
+      ...posts[postIndex],
+      author: { id: author.id, username: author.username },
+      category: null,
+      tags: [],
+      _count: { comments: 0, likes: 0 }
+    };
+
+    res.json(postWithDetails);
+  } catch (error) {
+    console.error('更新文章错误:', error);
+    res.status(500).json({ error: '服务器内部错误', details: error.message });
+  }
+});
+
 // 获取单篇文章
 app.get('/api/posts/:slug', (req, res) => {
   try {
