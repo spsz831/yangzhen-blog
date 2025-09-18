@@ -100,7 +100,7 @@ export default function AdminPage() {
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-900">
-              <Link href="/">YangZhen 个人博客</Link>
+              <Link href="/">杨振的个人博客</Link>
             </h1>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">管理后台</span>

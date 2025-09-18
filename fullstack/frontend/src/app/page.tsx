@@ -21,6 +21,11 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // 管理员快捷访问
+  const handleTitleDoubleClick = () => {
+    window.location.href = '/auth'
+  }
+
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -45,12 +50,18 @@ export default function Home() {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">YangZhen 个人博客</h1>
+            <h1
+              className="text-2xl font-bold text-gray-900 cursor-pointer select-none"
+              onDoubleClick={handleTitleDoubleClick}
+              title="双击进入管理后台"
+            >
+              杨振的个人博客
+            </h1>
             <nav className="flex space-x-6">
               <Link href="/" className="text-gray-600 hover:text-gray-900">首页</Link>
-              <Link href={typeof window !== 'undefined' && localStorage.getItem('auth_token') ? '/admin' : '/auth'} className="text-gray-600 hover:text-gray-900">
-                {typeof window !== 'undefined' && localStorage.getItem('auth_token') ? '管理后台' : '登录'}
-              </Link>
+              {typeof window !== 'undefined' && localStorage.getItem('auth_token') && (
+                <Link href="/admin" className="text-gray-600 hover:text-gray-900">管理后台</Link>
+              )}
               <Link href="/about" className="text-gray-600 hover:text-gray-900">关于</Link>
             </nav>
           </div>

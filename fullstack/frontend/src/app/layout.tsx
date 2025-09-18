@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "YangZhen 个人博客",
+  title: "杨振的个人博客",
   description: "分享技术心得和项目经验的个人博客",
 };
 
