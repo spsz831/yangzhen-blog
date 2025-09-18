@@ -281,10 +281,12 @@ app.post('/api/posts', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: '标题和内容都是必需的' });
     }
 
-    // 生成slug
+    // 生成slug - 只保留英文字母、数字，中文转为拼音或移除
     const slug = title.toLowerCase()
-      .replace(/[^\u4e00-\u9fa5a-z0-9\s]/gi, '')
-      .replace(/\s+/g, '-');
+      .replace(/[^\w\s-]/g, '') // 只保留字母数字和空格连字符
+      .replace(/\s+/g, '-')     // 空格转连字符
+      .replace(/-+/g, '-')      // 多个连字符合并为一个
+      .replace(/^-|-$/g, '');   // 移除首尾连字符
 
     // 确保slug唯一
     let uniqueSlug = slug;
@@ -328,7 +330,11 @@ app.post('/api/posts', authenticateToken, async (req, res) => {
 // 获取单篇文章
 app.get('/api/posts/:slug', (req, res) => {
   try {
-    const { slug } = req.params;
+    let { slug } = req.params;
+
+    // URL解码处理中文字符
+    slug = decodeURIComponent(slug);
+
     const post = posts.find(p => p.slug === slug && p.published);
 
     if (!post) {

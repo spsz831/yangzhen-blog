@@ -9,6 +9,7 @@ import ThemeToggle from '../components/ThemeToggle'
 interface Post {
   id: number
   title: string
+  slug: string
   excerpt: string
   createdAt: string
   author?: {
@@ -144,7 +145,7 @@ export default function Home() {
               {posts.map((post) => (
                 <article key={post.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-6 hover:shadow-md dark:hover:shadow-lg transition-shadow">
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3 hover:text-blue-600 dark:hover:text-blue-400">
-                    <Link href={`/posts/${post.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
+                    <Link href={`/posts/${post.slug}`}>
                       {post.title}
                     </Link>
                   </h3>
@@ -155,7 +156,7 @@ export default function Home() {
                       <time>{new Date(post.createdAt).toLocaleDateString('zh-CN')}</time>
                     </div>
                     <Link
-                      href={`/posts/${post.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+                      href={`/posts/${post.slug}`}
                       className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                     >
                       阅读更多 →
