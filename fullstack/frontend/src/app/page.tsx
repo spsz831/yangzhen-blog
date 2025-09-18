@@ -157,17 +157,7 @@ export default function Home() {
       <footer className="bg-white border-t mt-12">
         <div className="max-w-6xl mx-auto px-4 py-8 text-center text-gray-600">
           <p>&copy; 2024 杨振的个人博客. 所有权利保留.</p>
-          <p className="mt-2 text-sm">
-            Powered by Next.js + Railway API
-            {' '}·{' '}
-            <span
-              className="cursor-pointer hover:text-gray-800 transition-colors"
-              onClick={() => window.location.href = '/auth'}
-              title="管理员入口"
-            >
-              Admin
-            </span>
-          </p>
+          <p className="mt-2 text-sm">Powered by Next.js + Railway API</p>
         </div>
       </footer>
     </div>
