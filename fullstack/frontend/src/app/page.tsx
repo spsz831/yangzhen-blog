@@ -171,8 +171,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-white dark:bg-gray-800 border-t dark:border-gray-700 mt-12">
         <div className="max-w-6xl mx-auto px-4 py-8 text-center text-gray-600 dark:text-gray-300">
-          <p>&copy; 2025 杨振</p>
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">简单 · 专注 · 成长</p>
+          <p>版权所有 © yangzhen 2025</p>
         </div>
       </footer>
     </div>
