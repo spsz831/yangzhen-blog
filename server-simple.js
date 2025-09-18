@@ -12,9 +12,8 @@ const PORT = process.env.PORT || 3001;
 // 中间件
 app.use(helmet());
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ?
-    ['https://your-frontend.vercel.app'] :
-    ['http://localhost:3000']
+  origin: true,  // 允许所有域名，开发阶段使用
+  credentials: true
 }));
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
