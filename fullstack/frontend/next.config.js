@@ -9,6 +9,18 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://yangzhen-blog-railway-production.up.railway.app/api',
   },
+
+  // 允许外部图片域名
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'i.vgy.me',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
 }
 
 module.exports = nextConfig

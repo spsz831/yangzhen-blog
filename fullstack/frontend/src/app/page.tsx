@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import Link from 'next/link'
+import Image from 'next/image'
 import ThemeToggle from '../components/ThemeToggle'
 
 interface Post {
@@ -75,9 +76,19 @@ export default function Home() {
       <header className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700">
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              杨振的个人博客
-            </h1>
+            <div className="flex items-center space-x-3">
+              <Image
+                src="https://i.vgy.me/vhFMxi.png"
+                alt="杨振头像"
+                width={40}
+                height={40}
+                className="rounded-full object-cover"
+                priority
+              />
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                杨振的个人博客
+              </h1>
+            </div>
             <div className="flex items-center space-x-6">
               <nav className="flex space-x-6">
                 <Link href="/" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">首页</Link>
