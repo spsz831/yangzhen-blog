@@ -9,14 +9,38 @@ const { body, validationResult } = require('express-validator');
 require('dotenv').config();
 
 const app = express();
-const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
+
+// 初始化Prisma客户端（带错误处理）
+let prisma;
+try {
+  prisma = new PrismaClient({
+    log: ['error', 'warn'],
+    errorFormat: 'pretty',
+  });
+} catch (error) {
+  console.error('Prisma初始化失败:', error);
+  // 不要退出进程，继续运行基础API
+}
 
 // 中间件
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' ?
+    ['https://your-frontend.vercel.app'] :
+    ['http://localhost:3000']
+}));
 app.use(morgan('combined'));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+
+// 错误处理中间件
+app.use((err, req, res, next) => {
+  console.error('服务器错误:', err);
+  res.status(500).json({
+    error: '服务器内部错误',
+    message: process.env.NODE_ENV === 'development' ? err.message : '请稍后重试'
+  });
+});
 
 // 认证中间件
 const authenticateToken = (req, res, next) => {
@@ -27,7 +51,7 @@ const authenticateToken = (req, res, next) => {
     return res.status(401).json({ error: '需要访问令牌' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret', (err, user) => {
     if (err) {
       return res.status(403).json({ error: '无效的令牌' });
     }
@@ -36,22 +60,79 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// 路由
+// 基础路由（无需数据库）
 app.get('/', (req, res) => {
   res.json({
     message: 'YangZhen Blog API',
     version: '1.0.0',
-    status: 'running'
+    status: 'running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
-// 健康检查
-app.get('/health', (req, res) => {
-  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+// 健康检查（包括数据库状态）
+app.get('/health', async (req, res) => {
+  let dbStatus = 'unknown';
+
+  if (prisma) {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      dbStatus = 'connected';
+    } catch (error) {
+      console.error('数据库连接检查失败:', error);
+      dbStatus = 'disconnected';
+    }
+  } else {
+    dbStatus = 'not_initialized';
+  }
+
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    database: dbStatus,
+    port: PORT,
+    memory: process.memoryUsage()
+  });
 });
 
+// 数据库状态检查
+app.get('/api/status', async (req, res) => {
+  if (!prisma) {
+    return res.status(503).json({
+      error: 'Prisma客户端未初始化',
+      database: 'not_available'
+    });
+  }
+
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({
+      database: 'connected',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('数据库连接失败:', error);
+    res.status(503).json({
+      error: '数据库连接失败',
+      message: error.message
+    });
+  }
+});
+
+// 带数据库检查的中间件
+const requireDatabase = (req, res, next) => {
+  if (!prisma) {
+    return res.status(503).json({
+      error: '数据库服务不可用',
+      message: 'Prisma客户端未初始化'
+    });
+  }
+  next();
+};
+
 // 用户注册
-app.post('/api/auth/register', [
+app.post('/api/auth/register', requireDatabase, [
   body('username').isLength({ min: 3 }).withMessage('用户名至少3个字符'),
   body('email').isEmail().withMessage('请提供有效的邮箱地址'),
   body('password').isLength({ min: 6 }).withMessage('密码至少6个字符')
@@ -94,19 +175,19 @@ app.post('/api/auth/register', [
     // 生成JWT
     const token = jwt.sign(
       { userId: user.id, username: user.username },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'fallback-secret',
       { expiresIn: '7d' }
     );
 
     res.status(201).json({ user, token });
   } catch (error) {
     console.error('注册错误:', error);
-    res.status(500).json({ error: '服务器内部错误' });
+    res.status(500).json({ error: '服务器内部错误', details: error.message });
   }
 });
 
 // 用户登录
-app.post('/api/auth/login', [
+app.post('/api/auth/login', requireDatabase, [
   body('username').notEmpty().withMessage('用户名不能为空'),
   body('password').notEmpty().withMessage('密码不能为空')
 ], async (req, res) => {
@@ -136,7 +217,7 @@ app.post('/api/auth/login', [
     // 生成JWT
     const token = jwt.sign(
       { userId: user.id, username: user.username },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'fallback-secret',
       { expiresIn: '7d' }
     );
 
@@ -150,12 +231,12 @@ app.post('/api/auth/login', [
     });
   } catch (error) {
     console.error('登录错误:', error);
-    res.status(500).json({ error: '服务器内部错误' });
+    res.status(500).json({ error: '服务器内部错误', details: error.message });
   }
 });
 
 // 获取所有文章
-app.get('/api/posts', async (req, res) => {
+app.get('/api/posts', requireDatabase, async (req, res) => {
   try {
     const { page = 1, limit = 10, search, category } = req.query;
     const skip = (page - 1) * limit;
@@ -201,149 +282,58 @@ app.get('/api/posts', async (req, res) => {
     });
   } catch (error) {
     console.error('获取文章错误:', error);
-    res.status(500).json({ error: '服务器内部错误' });
+    res.status(500).json({ error: '服务器内部错误', details: error.message });
   }
-});
-
-// 获取单篇文章
-app.get('/api/posts/:slug', async (req, res) => {
-  try {
-    const { slug } = req.params;
-
-    const post = await prisma.post.findUnique({
-      where: { slug },
-      include: {
-        author: {
-          select: { id: true, username: true }
-        },
-        category: true,
-        tags: true,
-        comments: {
-          include: {
-            author: {
-              select: { id: true, username: true }
-            }
-          },
-          orderBy: { createdAt: 'desc' }
-        },
-        _count: {
-          select: { likes: true }
-        }
-      }
-    });
-
-    if (!post) {
-      return res.status(404).json({ error: '文章未找到' });
-    }
-
-    // 增加浏览量
-    await prisma.post.update({
-      where: { id: post.id },
-      data: { views: { increment: 1 } }
-    });
-
-    res.json(post);
-  } catch (error) {
-    console.error('获取文章错误:', error);
-    res.status(500).json({ error: '服务器内部错误' });
-  }
-});
-
-// 创建文章（需要认证）
-app.post('/api/posts', authenticateToken, [
-  body('title').notEmpty().withMessage('标题不能为空'),
-  body('content').notEmpty().withMessage('内容不能为空'),
-  body('slug').notEmpty().withMessage('文章别名不能为空')
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { title, content, slug, excerpt, categoryId, tagIds } = req.body;
-
-    // 检查slug是否已存在
-    const existingPost = await prisma.post.findUnique({
-      where: { slug }
-    });
-
-    if (existingPost) {
-      return res.status(400).json({ error: '文章别名已存在' });
-    }
-
-    const post = await prisma.post.create({
-      data: {
-        title,
-        content,
-        slug,
-        excerpt,
-        authorId: req.user.userId,
-        categoryId: categoryId || null,
-        tags: tagIds ? {
-          connect: tagIds.map(id => ({ id }))
-        } : undefined
-      },
-      include: {
-        author: {
-          select: { id: true, username: true }
-        },
-        category: true,
-        tags: true
-      }
-    });
-
-    res.status(201).json(post);
-  } catch (error) {
-    console.error('创建文章错误:', error);
-    res.status(500).json({ error: '服务器内部错误' });
-  }
-});
-
-// 获取分类
-app.get('/api/categories', async (req, res) => {
-  try {
-    const categories = await prisma.category.findMany({
-      include: {
-        _count: {
-          select: { posts: true }
-        }
-      }
-    });
-
-    res.json(categories);
-  } catch (error) {
-    console.error('获取分类错误:', error);
-    res.status(500).json({ error: '服务器内部错误' });
-  }
-});
-
-// 错误处理中间件
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: '服务器内部错误' });
 });
 
 // 404处理
 app.use('*', (req, res) => {
-  res.status(404).json({ error: 'API端点未找到' });
+  res.status(404).json({
+    error: 'API端点未找到',
+    path: req.originalUrl,
+    method: req.method
+  });
 });
 
 // 启动服务器
-app.listen(PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 服务器运行在端口 ${PORT}`);
-  console.log(`📝 API文档: http://localhost:${PORT}/`);
+  console.log(`📝 API文档: http://0.0.0.0:${PORT}/`);
+  console.log(`🌍 环境: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📊 内存使用: ${JSON.stringify(process.memoryUsage())}`);
 });
 
 // 优雅关闭
-process.on('SIGTERM', async () => {
-  console.log('收到SIGTERM信号，正在优雅关闭...');
-  await prisma.$disconnect();
-  process.exit(0);
+const gracefulShutdown = async (signal) => {
+  console.log(`收到${signal}信号，正在优雅关闭...`);
+
+  server.close(async () => {
+    console.log('HTTP服务器已关闭');
+
+    if (prisma) {
+      try {
+        await prisma.$disconnect();
+        console.log('数据库连接已断开');
+      } catch (error) {
+        console.error('断开数据库连接时出错:', error);
+      }
+    }
+
+    process.exit(0);
+  });
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// 未捕获异常处理
+process.on('uncaughtException', (error) => {
+  console.error('未捕获的异常:', error);
+  process.exit(1);
 });
 
-process.on('SIGINT', async () => {
-  console.log('收到SIGINT信号，正在优雅关闭...');
-  await prisma.$disconnect();
-  process.exit(0);
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('未处理的Promise拒绝:', reason);
+  console.error('Promise:', promise);
+  process.exit(1);
 });
