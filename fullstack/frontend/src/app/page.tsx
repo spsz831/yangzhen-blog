@@ -48,7 +48,9 @@ export default function Home() {
             <h1 className="text-2xl font-bold text-gray-900">YangZhen 个人博客</h1>
             <nav className="flex space-x-6">
               <Link href="/" className="text-gray-600 hover:text-gray-900">首页</Link>
-              <Link href="/auth" className="text-gray-600 hover:text-gray-900">登录</Link>
+              <Link href={typeof window !== 'undefined' && localStorage.getItem('auth_token') ? '/admin' : '/auth'} className="text-gray-600 hover:text-gray-900">
+                {typeof window !== 'undefined' && localStorage.getItem('auth_token') ? '管理后台' : '登录'}
+              </Link>
               <Link href="/about" className="text-gray-600 hover:text-gray-900">关于</Link>
             </nav>
           </div>
