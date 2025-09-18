@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // 图片优化配置 - 优化为支持部署平台
   images: {
-    domains: ['localhost', 'railway.app', '*.railway.app'],
+    domains: ['localhost', 'railway.app'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -15,8 +15,6 @@ const nextConfig: NextConfig = {
       },
     ],
     formats: ['image/webp', 'image/avif'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
   // 压缩配置
@@ -33,9 +31,6 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api',
   },
 
-  // Vercel 优化配置
-  output: 'standalone',
-
   // 重定向配置
   async redirects() {
     return [
@@ -47,7 +42,7 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Headers 配置 - 优化缓存策略
+  // Headers 配置 - 简化版本
   async headers() {
     return [
       {
@@ -60,37 +55,6 @@ const nextConfig: NextConfig = {
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
-          },
-        ],
-      },
-      {
-        source: '/api/(.*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=0, must-revalidate',
-          },
-        ],
-      },
-      {
-        source: '/_next/static/(.*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      {
-        source: '/(.*\\.(ico|png|jpg|jpeg|gif|svg|webp|avif))',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=86400',
           },
         ],
       },
