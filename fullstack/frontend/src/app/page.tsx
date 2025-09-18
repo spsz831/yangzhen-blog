@@ -21,12 +21,31 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // 管理员快捷访问
-  const handleTitleDoubleClick = () => {
-    window.location.href = '/auth'
-  }
-
   useEffect(() => {
+    // 检查URL参数，支持管理员快速访问
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('admin') === '1' || urlParams.get('m') === 'admin') {
+      window.location.href = '/auth'
+      return
+    }
+
+    // 添加快捷键监听
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // Ctrl + Alt + A = 管理后台
+      if (event.ctrlKey && event.altKey && event.key === 'a') {
+        event.preventDefault()
+        window.location.href = '/auth'
+      }
+      // Ctrl + Shift + L = 登录
+      if (event.ctrlKey && event.shiftKey && event.key === 'L') {
+        event.preventDefault()
+        window.location.href = '/auth'
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyPress)
+
+    // 获取文章数据
     const fetchPosts = async () => {
       try {
         setLoading(true)
@@ -42,6 +61,11 @@ export default function Home() {
     }
 
     fetchPosts()
+
+    // 清理事件监听器
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress)
+    }
   }, [])
 
   return (
@@ -50,11 +74,7 @@ export default function Home() {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
-            <h1
-              className="text-2xl font-bold text-gray-900 cursor-pointer select-none"
-              onDoubleClick={handleTitleDoubleClick}
-              title="双击进入管理后台"
-            >
+            <h1 className="text-2xl font-bold text-gray-900">
               杨振的个人博客
             </h1>
             <nav className="flex space-x-6">
@@ -136,8 +156,18 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-white border-t mt-12">
         <div className="max-w-6xl mx-auto px-4 py-8 text-center text-gray-600">
-          <p>&copy; 2024 YangZhen 个人博客. 所有权利保留.</p>
-          <p className="mt-2 text-sm">Powered by Next.js + Railway API</p>
+          <p>&copy; 2024 杨振的个人博客. 所有权利保留.</p>
+          <p className="mt-2 text-sm">
+            Powered by Next.js + Railway API
+            {' '}·{' '}
+            <span
+              className="cursor-pointer hover:text-gray-800 transition-colors"
+              onClick={() => window.location.href = '/auth'}
+              title="管理员入口"
+            >
+              Admin
+            </span>
+          </p>
         </div>
       </footer>
     </div>
