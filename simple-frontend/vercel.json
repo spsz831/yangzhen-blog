@@ -7,7 +7,6 @@
   "env": {
     "NEXT_PUBLIC_API_URL": "https://yangzhen-blog-railway-production.up.railway.app/api"
   },
-  "regions": ["sin1", "hkg1"],
   "functions": {
     "app/**/*.js": {
       "runtime": "nodejs18.x"
