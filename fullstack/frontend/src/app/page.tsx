@@ -64,17 +64,6 @@ export default function Home() {
           <p className="text-gray-600">分享技术心得和项目经验</p>
         </div>
 
-        {/* API Status */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-          <h3 className="font-semibold text-blue-900 mb-2">🔗 API 连接状态</h3>
-          <p className="text-blue-800 text-sm mb-1">
-            <strong>API URL:</strong> {API_URL}
-          </p>
-          <p className="text-blue-800 text-sm">
-            <strong>状态:</strong> {loading ? '连接中...' : error ? '❌ 连接失败' : '✅ 连接成功'}
-          </p>
-        </div>
-
         {/* Posts Section */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">最新文章</h2>
