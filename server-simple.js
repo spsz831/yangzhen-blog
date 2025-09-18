@@ -24,7 +24,7 @@ let users = [
     id: 1,
     username: 'yangzhen',
     email: 'yangzhen@example.com',
-    password: '$2a$12$LGKmx.xC9wEo9w8K2LmJVOZqwzGhAh7H9KCGnEaFHfLzqrOPW8x2G', // admin123456
+    password: '$2a$12$IwQec7LCzgEUmJ/PGSIz7uW8D.sXpO0g6HdjqHGX4kLwxhh8SsP5G', // admin123456
     role: 'ADMIN',
     createdAt: new Date().toISOString()
   }
