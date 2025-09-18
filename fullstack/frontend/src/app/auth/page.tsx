@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link'
 
 export default function AuthPage() {
   return (
@@ -6,7 +7,7 @@ export default function AuthPage() {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-4 py-6">
           <h1 className="text-2xl font-bold text-gray-900">
-            <a href="/">YangZhen 个人博客</a>
+            <Link href="/">YangZhen 个人博客</Link>
           </h1>
         </div>
       </header>

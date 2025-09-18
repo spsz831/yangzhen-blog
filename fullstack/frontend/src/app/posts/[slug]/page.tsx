@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import Link from 'next/link'
+import { use } from 'react'
 
 interface Post {
   id: number
@@ -16,7 +18,8 @@ interface Post {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://yangzhen-blog-railway-production.up.railway.app/api'
 
-export default function PostPage({ params }: { params: { slug: string } }) {
+export default function PostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params)
   const [post, setPost] = useState<Post | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -25,7 +28,7 @@ export default function PostPage({ params }: { params: { slug: string } }) {
     const fetchPost = async () => {
       try {
         setLoading(true)
-        const response = await axios.get(`${API_URL}/posts/${params.slug}`)
+        const response = await axios.get(`${API_URL}/posts/${slug}`)
         setPost(response.data)
         setError(null)
       } catch (err) {
@@ -36,10 +39,10 @@ export default function PostPage({ params }: { params: { slug: string } }) {
       }
     }
 
-    if (params.slug) {
+    if (slug) {
       fetchPost()
     }
-  }, [params.slug])
+  }, [slug])
 
   if (loading) {
     return (
@@ -65,12 +68,12 @@ export default function PostPage({ params }: { params: { slug: string } }) {
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">文章未找到</h1>
           <p className="text-gray-600 mb-6">{error || '抱歉，您访问的文章不存在。'}</p>
-          <a
+          <Link
             href="/"
             className="inline-block bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition-colors"
           >
             返回首页
-          </a>
+          </Link>
         </div>
       </div>
     )
@@ -96,12 +99,12 @@ export default function PostPage({ params }: { params: { slug: string } }) {
         </article>
 
         <div className="mt-8 pt-8 border-t">
-          <a
+          <Link
             href="/"
             className="inline-block bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors"
           >
             ← 返回文章列表
-          </a>
+          </Link>
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import Link from 'next/link'
 
 interface Post {
   id: number
@@ -46,9 +47,9 @@ export default function Home() {
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-900">YangZhen 个人博客</h1>
             <nav className="flex space-x-6">
-              <a href="/" className="text-gray-600 hover:text-gray-900">首页</a>
-              <a href="/auth" className="text-gray-600 hover:text-gray-900">登录</a>
-              <a href="/about" className="text-gray-600 hover:text-gray-900">关于</a>
+              <Link href="/" className="text-gray-600 hover:text-gray-900">首页</Link>
+              <Link href="/auth" className="text-gray-600 hover:text-gray-900">登录</Link>
+              <Link href="/about" className="text-gray-600 hover:text-gray-900">关于</Link>
             </nav>
           </div>
         </div>
@@ -106,9 +107,9 @@ export default function Home() {
               {posts.map((post) => (
                 <article key={post.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
                   <h3 className="text-xl font-semibold text-gray-900 mb-3 hover:text-blue-600">
-                    <a href={`/posts/${post.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
+                    <Link href={`/posts/${post.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
                       {post.title}
-                    </a>
+                    </Link>
                   </h3>
                   <p className="text-gray-600 mb-4 line-clamp-2">{post.excerpt}</p>
                   <div className="flex items-center justify-between text-sm text-gray-500">
@@ -116,12 +117,12 @@ export default function Home() {
                       {post.author && <span>作者: {post.author.username} • </span>}
                       <time>{new Date(post.createdAt).toLocaleDateString('zh-CN')}</time>
                     </div>
-                    <a
+                    <Link
                       href={`/posts/${post.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
                       className="text-blue-600 hover:text-blue-800"
                     >
                       阅读更多 →
-                    </a>
+                    </Link>
                   </div>
                 </article>
               ))}
