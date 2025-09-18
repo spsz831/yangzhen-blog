@@ -2,13 +2,14 @@
   "name": "yangzhen-blog",
   "version": "1.0.0",
   "description": "YangZhen Personal Blog Backend - Railway Optimized",
-  "main": "server-persistent.js",
+  "main": "server-fixed.js",
   "scripts": {
-    "build": "echo 'No build required for persistent version'",
-    "start": "node server-persistent.js",
+    "build": "echo 'No build required for fixed version'",
+    "start": "node server-fixed.js",
+    "start:persistent": "node server-persistent.js",
     "start:simple": "node server-simple.js",
     "start:full": "node server.js",
-    "dev": "nodemon server-persistent.js"
+    "dev": "nodemon server-fixed.js"
   },
   "keywords": ["blog", "express", "railway"],
   "author": "YangZhen",
