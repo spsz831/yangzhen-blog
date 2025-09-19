@@ -202,15 +202,108 @@ export default function AdminPage() {
   }
 
   const insertList = () => {
-    insertMarkdown('- ', '', '列表项')
+    if (!contentTextarea) return
+
+    const start = contentTextarea.selectionStart
+    const end = contentTextarea.selectionEnd
+    const selectedText = content.substring(start, end)
+
+    if (selectedText) {
+      // 处理多行文本
+      const lines = selectedText.split('\n')
+      const formattedLines = lines.map(line => {
+        const trimmedLine = line.trim()
+        if (trimmedLine === '') return line // 保持空行
+        // 如果已经是列表项，先移除现有标记
+        const cleanLine = trimmedLine.replace(/^[-*+]\s/, '').replace(/^\d+\.\s/, '')
+        return line.replace(trimmedLine, `- ${cleanLine}`)
+      })
+      const newText = formattedLines.join('\n')
+
+      const newContent = content.substring(0, start) + newText + content.substring(end)
+      setContent(newContent)
+
+      setTimeout(() => {
+        if (contentTextarea) {
+          contentTextarea.focus()
+          contentTextarea.setSelectionRange(start, start + newText.length)
+        }
+      }, 0)
+    } else {
+      // 单行插入
+      insertMarkdown('- ', '', '列表项')
+    }
   }
 
   const insertNumberedList = () => {
-    insertMarkdown('1. ', '', '列表项')
+    if (!contentTextarea) return
+
+    const start = contentTextarea.selectionStart
+    const end = contentTextarea.selectionEnd
+    const selectedText = content.substring(start, end)
+
+    if (selectedText) {
+      // 处理多行文本
+      const lines = selectedText.split('\n')
+      let counter = 1
+      const formattedLines = lines.map(line => {
+        const trimmedLine = line.trim()
+        if (trimmedLine === '') return line // 保持空行
+        // 如果已经是列表项，先移除现有标记
+        const cleanLine = trimmedLine.replace(/^[-*+]\s/, '').replace(/^\d+\.\s/, '')
+        const result = line.replace(trimmedLine, `${counter}. ${cleanLine}`)
+        counter++
+        return result
+      })
+      const newText = formattedLines.join('\n')
+
+      const newContent = content.substring(0, start) + newText + content.substring(end)
+      setContent(newContent)
+
+      setTimeout(() => {
+        if (contentTextarea) {
+          contentTextarea.focus()
+          contentTextarea.setSelectionRange(start, start + newText.length)
+        }
+      }, 0)
+    } else {
+      // 单行插入
+      insertMarkdown('1. ', '', '列表项')
+    }
   }
 
   const insertQuote = () => {
-    insertMarkdown('> ', '', '引用文本')
+    if (!contentTextarea) return
+
+    const start = contentTextarea.selectionStart
+    const end = contentTextarea.selectionEnd
+    const selectedText = content.substring(start, end)
+
+    if (selectedText) {
+      // 处理多行文本
+      const lines = selectedText.split('\n')
+      const formattedLines = lines.map(line => {
+        const trimmedLine = line.trim()
+        if (trimmedLine === '') return line // 保持空行
+        // 如果已经是引用，先移除现有标记
+        const cleanLine = trimmedLine.replace(/^>\s?/, '')
+        return line.replace(trimmedLine, `> ${cleanLine}`)
+      })
+      const newText = formattedLines.join('\n')
+
+      const newContent = content.substring(0, start) + newText + content.substring(end)
+      setContent(newContent)
+
+      setTimeout(() => {
+        if (contentTextarea) {
+          contentTextarea.focus()
+          contentTextarea.setSelectionRange(start, start + newText.length)
+        }
+      }, 0)
+    } else {
+      // 单行插入
+      insertMarkdown('> ', '', '引用文本')
+    }
   }
 
   // 键盘快捷键处理
