@@ -1,25 +1,21 @@
 {
   "name": "yangzhen-blog",
-  "version": "1.0.0",
-  "description": "YangZhen Personal Blog Backend - Railway Optimized",
+  "version": "2.0.0",
+  "description": "现代化全栈个人博客系统 - 支持高级Markdown编辑和实时预览",
   "main": "server-postgres-native.js",
   "scripts": {
-    "build": "echo 'PostgreSQL Native Build completed'",
+    "build": "echo 'Backend build completed'",
     "start": "node server-postgres-native.js",
-    "start:postgres": "node server-postgres.js",
-    "start:fixed": "node server-fixed.js",
-    "start:persistent": "node server-persistent.js",
-    "start:simple": "node server-simple.js",
-    "start:full": "node server.js",
-    "dev": "nodemon server-postgres.js",
-    "db:push": "npx prisma db push",
-    "db:migrate": "npx prisma migrate dev",
-    "db:seed": "node prisma/seed.js",
-    "db:studio": "npx prisma studio"
+    "dev": "nodemon server-postgres-native.js"
   },
-  "keywords": ["blog", "express", "railway"],
+  "keywords": ["blog", "express", "postgresql", "markdown", "fullstack"],
   "author": "YangZhen",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spsz831/yangzhen-blog.git"
+  },
+  "homepage": "https://yangzhen-blog.vercel.app",
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
