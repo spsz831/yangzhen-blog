@@ -28,6 +28,26 @@ async function initializeDatabase() {
   try {
     console.log('🔄 正在初始化数据库架构...');
 
+    // 检查用户表是否存在并有正确结构
+    const userTableCheck = await client.query(`
+      SELECT column_name FROM information_schema.columns
+      WHERE table_name = 'users' AND table_schema = 'public'
+    `);
+
+    const postTableCheck = await client.query(`
+      SELECT column_name FROM information_schema.columns
+      WHERE table_name = 'posts' AND table_schema = 'public'
+    `);
+
+    // 如果表结构不完整，重新创建
+    if (userTableCheck.rows.length === 0 || postTableCheck.rows.length === 0) {
+      console.log('⚠️ 检测到表结构问题，重新创建...');
+
+      // 删除现有表
+      await client.query('DROP TABLE IF EXISTS posts CASCADE');
+      await client.query('DROP TABLE IF EXISTS users CASCADE');
+    }
+
     // 创建用户表
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
