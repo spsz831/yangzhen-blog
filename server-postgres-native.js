@@ -7,8 +7,20 @@ const { Client, Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 3005;
 
+// CORS配置 - 支持新旧域名
+const corsOptions = {
+  origin: [
+    'https://yangzhen-blog.vercel.app',           // 新域名
+    'https://yangzhen-blog-railway.vercel.app',  // 旧域名 (向后兼容)
+    'http://localhost:3000',                     // 本地开发
+    'http://localhost:3001'                      // 本地开发备用
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
 // 中间件
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 console.log('PostgreSQL博客服务器启动中...');
