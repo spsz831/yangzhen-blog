@@ -201,98 +201,152 @@ export default function AdminPage() {
         </div>
 
         {activeTab === 'create' && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-8">
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
-              {editingPost ? '编辑文章' : '发布新文章'}
-            </h2>
-
-            {editingPost && (
-              <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
-                <div className="flex justify-between items-center">
-                  <p className="text-blue-800 dark:text-blue-200">
-                    正在编辑文章: <strong>{editingPost.title}</strong>
-                  </p>
-                  <button
-                    onClick={handleCancelEdit}
-                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 text-sm"
-                  >
-                    取消编辑
+          <div className="max-w-4xl mx-auto">
+            {/* 编辑器工具栏 */}
+            <div className="bg-white dark:bg-gray-800 rounded-t-lg border border-b-0 dark:border-gray-700 p-4">
+              <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex items-center space-x-2">
+                  <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </button>
+                  <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded font-bold">B</button>
+                  <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded italic">I</button>
+                  <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                  </button>
+                  <span className="text-gray-400">|</span>
+                  <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
+                  </button>
+                  <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6M9 16h6m2-8V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-2" />
+                    </svg>
                   </button>
                 </div>
+                <span className="text-gray-400">|</span>
+                <span>在此处输入，使用 Markdown、BBCode 或 HTML 进行格式化，插件或插入图片。</span>
               </div>
-            )}
+            </div>
 
-            {message && (
-              <div className={`mb-6 p-4 rounded-md ${
-                message.includes('成功')
-                  ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-800'
-                  : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800'
-              }`}>
-                {message}
+            {/* 主编辑区域 */}
+            <div className="bg-white dark:bg-gray-800 rounded-b-lg border dark:border-gray-700 shadow-sm">
+              {editingPost && (
+                <div className="px-6 py-4 bg-blue-50 dark:bg-blue-900/20 border-b dark:border-gray-700">
+                  <div className="flex justify-between items-center">
+                    <p className="text-blue-800 dark:text-blue-200 text-sm">
+                      正在编辑文章: <strong>{editingPost.title}</strong>
+                    </p>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 text-sm"
+                    >
+                      取消编辑
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {message && (
+                <div className={`px-6 py-4 border-b dark:border-gray-700 ${
+                  message.includes('成功')
+                    ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200'
+                    : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200'
+                }`}>
+                  {message}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                {/* 文章标题 */}
+                <div>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full px-0 py-3 text-2xl font-bold bg-transparent border-0 focus:outline-none focus:ring-0 text-gray-900 dark:text-white placeholder-gray-400"
+                    placeholder="请输入文章标题..."
+                    required
+                  />
+                  <div className="h-px bg-gray-200 dark:bg-gray-700 mt-2"></div>
+                </div>
+
+                {/* 文章摘要 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    文章摘要 <span className="text-gray-400">(可选)</span>
+                  </label>
+                  <textarea
+                    value={excerpt}
+                    onChange={(e) => setExcerpt(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 resize-none"
+                    rows={3}
+                    placeholder="输入文章摘要..."
+                  />
+                </div>
+
+                {/* 文章内容 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    文章内容 <span className="text-gray-400">(支持Markdown)</span>
+                  </label>
+                  <div className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
+                    <textarea
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      className="w-full px-4 py-4 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 border-0 focus:outline-none focus:ring-0 resize-none font-mono text-sm leading-relaxed"
+                      rows={20}
+                      placeholder="在此处输入文章内容，支持 Markdown 格式..."
+                      required
+                    />
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    在用时：新增评论通论者功能查询功能或还是含有类似问题。编辑器会告诉你提示相关问题。
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    搞笑，回复谁记录，真诚，关爱，回趣，专业，共建你我们以为来支之社区。
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            {/* 底部按钮区域 */}
+            <div className="flex justify-between items-center mt-6 px-2">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setActiveTab('manage')}
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                >
+                  文章管理
+                </button>
               </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  文章标题
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="输入文章标题..."
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  文章摘要（可选）
-                </label>
-                <textarea
-                  value={excerpt}
-                  onChange={(e) => setExcerpt(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  rows={3}
-                  placeholder="输入文章摘要..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  文章内容（支持Markdown）
-                </label>
-                <textarea
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  rows={15}
-                  placeholder="输入文章内容..."
-                  required
-                />
-              </div>
-
-              <div className="flex justify-end space-x-4">
+              <div className="flex items-center space-x-3">
                 {editingPost && (
                   <button
                     type="button"
                     onClick={handleCancelEdit}
-                    className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+                    className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >
                     取消
                   </button>
                 )}
                 <button
                   type="submit"
+                  form="article-form"
                   disabled={loading}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  className="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  onClick={handleSubmit}
                 >
-                  {loading ? '处理中...' : editingPost ? '更新文章' : '发布文章'}
+                  {loading ? '发布中...' : editingPost ? '更新文章' : '发布文章'}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         )}
 
