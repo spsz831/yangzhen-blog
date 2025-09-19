@@ -39,3 +39,8 @@ prisma/generated/
 *.backup
 *.bak
 backup-*.json
+
+# Private/Sensitive files
+ADMIN-GUIDE.md
+*-private.md
+*-secret.md
