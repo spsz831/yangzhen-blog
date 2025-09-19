@@ -2,6 +2,10 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import axios from 'axios'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeHighlight from 'rehype-highlight'
+import rehypeRaw from 'rehype-raw'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://yangzhen-blog-railway-production.up.railway.app/api'
 
@@ -29,6 +33,10 @@ export default function AdminPage() {
   const [editingPost, setEditingPost] = useState<Post | null>(null)
   const [activeTab, setActiveTab] = useState<'create' | 'manage'>('create')
   const [contentTextarea, setContentTextarea] = useState<HTMLTextAreaElement | null>(null)
+  const [showLinkModal, setShowLinkModal] = useState(false)
+  const [linkText, setLinkText] = useState('')
+  const [linkUrl, setLinkUrl] = useState('')
+  const [previewMode, setPreviewMode] = useState<'edit' | 'preview' | 'split'>('split')
 
   useEffect(() => {
     // 检查登录状态
@@ -159,7 +167,30 @@ export default function AdminPage() {
   }
 
   const insertLink = () => {
-    insertMarkdown('[', '](url)', '链接文本')
+    setShowLinkModal(true)
+    setLinkText('')
+    setLinkUrl('')
+  }
+
+  const handleInsertLink = () => {
+    const linkMarkdown = `[${linkUrl || linkText || '链接文本'}](${linkText || 'url'})`
+    if (contentTextarea) {
+      const start = contentTextarea.selectionStart
+      const end = contentTextarea.selectionEnd
+      const newContent = content.substring(0, start) + linkMarkdown + content.substring(end)
+      setContent(newContent)
+
+      setTimeout(() => {
+        if (contentTextarea) {
+          contentTextarea.focus()
+          const newCursorPos = start + linkMarkdown.length
+          contentTextarea.setSelectionRange(newCursorPos, newCursorPos)
+        }
+      }, 0)
+    }
+    setShowLinkModal(false)
+    setLinkText('')
+    setLinkUrl('')
   }
 
   const insertCode = () => {
@@ -290,55 +321,98 @@ export default function AdminPage() {
         {activeTab === 'create' && (
           <div className="max-w-4xl mx-auto">
             {/* 编辑器工具栏 */}
-            <div className="bg-white dark:bg-gray-800 rounded-t-lg border border-b-0 dark:border-gray-700 p-4">
-              <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
-                {/* 标题下拉菜单 */}
-                <div className="relative group">
-                  <button className="flex items-center px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-xs font-medium">
-                    ⇩ 标题
-                  </button>
-                  <div className="absolute top-full left-0 mt-1 w-32 bg-white dark:bg-gray-800 border dark:border-gray-600 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                    <button onClick={() => insertHeading(1)} className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-xl font-bold">H1 标题 1</button>
-                    <button onClick={() => insertHeading(2)} className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-lg font-semibold">H2 标题 2</button>
-                    <button onClick={() => insertHeading(3)} className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-base font-medium">H3 标题 3</button>
-                    <button onClick={() => insertHeading(4)} className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium">H4 标题 4</button>
+            <div className="bg-white dark:bg-gray-800 rounded-t-lg border border-b-0 dark:border-gray-700 p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
+                  {/* 标题下拉菜单 */}
+                  <div className="relative group">
+                    <button className="flex items-center px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm font-medium border border-gray-200 dark:border-gray-600">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                      </svg>
+                      标题
+                      <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    <div className="absolute top-full left-0 mt-1 w-36 bg-white dark:bg-gray-800 border dark:border-gray-600 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                      <button onClick={() => insertHeading(1)} className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-xl font-bold">H1 标题 1</button>
+                      <button onClick={() => insertHeading(2)} className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-lg font-semibold">H2 标题 2</button>
+                      <button onClick={() => insertHeading(3)} className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-base font-medium">H3 标题 3</button>
+                      <button onClick={() => insertHeading(4)} className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium">H4 标题 4</button>
+                    </div>
                   </div>
+
+                  <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-2"></div>
+
+                  {/* 格式化按钮 */}
+                  <button onClick={toggleBold} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded font-bold text-sm border border-transparent hover:border-gray-300 dark:hover:border-gray-600" title="粗体 (Ctrl+B)">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M6 4h6.5a4.5 4.5 0 0 1 3.256 7.606A5 5 0 0 1 13.5 20H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm1 2v5h5.5a2.5 2.5 0 1 0 0-5H7zm0 7v5h6.5a3 3 0 1 0 0-6H7z"/>
+                    </svg>
+                  </button>
+                  <button onClick={toggleItalic} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded italic text-sm border border-transparent hover:border-gray-300 dark:hover:border-gray-600" title="斜体 (Ctrl+I)">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M15 4a1 1 0 0 1 0 2h-2.25l-3.5 12H11a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2h2.25l3.5-12H9a1 1 0 1 1 0-2h6z"/>
+                    </svg>
+                  </button>
+                  <button onClick={insertLink} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm border border-transparent hover:border-gray-300 dark:hover:border-gray-600" title="插入链接 (Ctrl+K)">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                  </button>
+                  <button onClick={insertCode} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm font-mono border border-transparent hover:border-gray-300 dark:hover:border-gray-600" title="行内代码 (Ctrl+`)">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                  </button>
+                  <button onClick={insertCodeBlock} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm border border-transparent hover:border-gray-300 dark:hover:border-gray-600" title="代码块">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+
+                  <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-2"></div>
+
+                  {/* 列表按钮 */}
+                  <button onClick={insertList} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm border border-transparent hover:border-gray-300 dark:hover:border-gray-600" title="无序列表">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
+                  </button>
+                  <button onClick={insertNumberedList} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm border border-transparent hover:border-gray-300 dark:hover:border-gray-600" title="有序列表">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                  </button>
+                  <button onClick={insertQuote} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm border border-transparent hover:border-gray-300 dark:hover:border-gray-600" title="引用">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M4.583 17.321C3.553 16.227 3 15 3 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311 1.804.167 3.226 1.648 3.226 3.489a3.5 3.5 0 01-3.5 3.5c-1.073 0-2.099-.49-2.748-1.179zm10 0C13.553 16.227 13 15 13 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311 1.804.167 3.226 1.648 3.226 3.489a3.5 3.5 0 01-3.5 3.5c-1.073 0-2.099-.49-2.748-1.179z"/>
+                    </svg>
+                  </button>
                 </div>
 
-                <span className="text-gray-300 dark:text-gray-600">|</span>
-
-                {/* 格式化按钮 */}
-                <button onClick={toggleBold} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded font-bold text-sm" title="粗体 (Ctrl+B)">
-                  B
-                </button>
-                <button onClick={toggleItalic} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded italic text-sm" title="斜体 (Ctrl+I)">
-                  I
-                </button>
-                <button onClick={insertLink} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm" title="插入链接">
-                  🔗
-                </button>
-                <button onClick={insertCode} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm font-mono" title="行内代码">
-                  {'</>'}
-                </button>
-                <button onClick={insertCodeBlock} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm" title="代码块">
-                  💻
-                </button>
-
-                <span className="text-gray-300 dark:text-gray-600">|</span>
-
-                {/* 列表按钮 */}
-                <button onClick={insertList} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm" title="无序列表">
-                  •
-                </button>
-                <button onClick={insertNumberedList} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm" title="有序列表">
-                  1.
-                </button>
-                <button onClick={insertQuote} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm" title="引用">
-                  ❝
-                </button>
-
-                <span className="text-gray-300 dark:text-gray-600 ml-4">|</span>
-                <span className="text-xs">支持 Markdown 格式化语法</span>
+                {/* 预览模式切换 */}
+                <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-md p-1">
+                  <button
+                    onClick={() => setPreviewMode('edit')}
+                    className={`px-3 py-1 text-xs rounded ${previewMode === 'edit' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-600 dark:text-gray-400'}`}
+                  >
+                    编辑
+                  </button>
+                  <button
+                    onClick={() => setPreviewMode('split')}
+                    className={`px-3 py-1 text-xs rounded ${previewMode === 'split' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-600 dark:text-gray-400'}`}
+                  >
+                    分屏
+                  </button>
+                  <button
+                    onClick={() => setPreviewMode('preview')}
+                    className={`px-3 py-1 text-xs rounded ${previewMode === 'preview' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-600 dark:text-gray-400'}`}
+                  >
+                    预览
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -403,23 +477,58 @@ export default function AdminPage() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     文章内容 <span className="text-gray-400">(支持Markdown)</span>
                   </label>
+
+                  {/* 分屏编辑器 */}
                   <div className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
-                    <textarea
-                      ref={setContentTextarea}
-                      value={content}
-                      onChange={(e) => setContent(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      className="w-full px-4 py-4 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 border-0 focus:outline-none focus:ring-0 resize-none font-mono text-sm leading-relaxed"
-                      rows={20}
-                      placeholder="在此处输入文章内容，支持 Markdown 格式...&#10;快捷键: Ctrl+B (粗体), Ctrl+I (斜体), Ctrl+K (链接), Ctrl+` (代码)"
-                      required
-                    />
-                  </div>
-                  <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                    在用时：新增评论通论者功能查询功能或还是含有类似问题。编辑器会告诉你提示相关问题。
-                  </div>
-                  <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    搞笑，回复谁记录，真诚，关爱，回趣，专业，共建你我们以为来支之社区。
+                    <div className={`flex ${previewMode === 'split' ? 'grid grid-cols-2' : ''}`}>
+                      {/* 编辑区域 */}
+                      {(previewMode === 'edit' || previewMode === 'split') && (
+                        <div className={`${previewMode === 'split' ? 'border-r border-gray-200 dark:border-gray-600' : ''}`}>
+                          <textarea
+                            ref={setContentTextarea}
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            className="w-full px-4 py-4 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 border-0 focus:outline-none focus:ring-0 resize-none font-mono text-sm leading-relaxed"
+                            rows={previewMode === 'split' ? 25 : 20}
+                            placeholder="在此处输入文章内容，支持 Markdown 格式...&#10;快捷键: Ctrl+B (粗体), Ctrl+I (斜体), Ctrl+K (链接), Ctrl+` (代码)"
+                            required
+                          />
+                        </div>
+                      )}
+
+                      {/* 预览区域 */}
+                      {(previewMode === 'preview' || previewMode === 'split') && (
+                        <div className={`${previewMode === 'split' ? 'overflow-y-auto' : ''} bg-gray-50 dark:bg-gray-900`}>
+                          <div className="px-4 py-4">
+                            <div className={`prose prose-sm max-w-none dark:prose-invert ${previewMode === 'split' ? 'h-96 overflow-y-auto' : ''}`}>
+                              <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                rehypePlugins={[rehypeHighlight, rehypeRaw]}
+                                components={{
+                                  h1: ({children}) => <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">{children}</h1>,
+                                  h2: ({children}) => <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2 mt-4">{children}</h2>,
+                                  h3: ({children}) => <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 mt-3">{children}</h3>,
+                                  h4: ({children}) => <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1 mt-2">{children}</h4>,
+                                  p: ({children}) => <p className="text-gray-700 dark:text-gray-300 mb-3 leading-relaxed text-sm">{children}</p>,
+                                  ul: ({children}) => <ul className="list-disc list-inside mb-3 space-y-1 text-gray-700 dark:text-gray-300 text-sm">{children}</ul>,
+                                  ol: ({children}) => <ol className="list-decimal list-inside mb-3 space-y-1 text-gray-700 dark:text-gray-300 text-sm">{children}</ol>,
+                                  li: ({children}) => <li className="text-gray-700 dark:text-gray-300 text-sm">{children}</li>,
+                                  strong: ({children}) => <strong className="font-semibold text-gray-900 dark:text-gray-100">{children}</strong>,
+                                  em: ({children}) => <em className="italic text-gray-700 dark:text-gray-300">{children}</em>,
+                                  code: ({children}) => <code className="bg-gray-200 dark:bg-gray-800 px-1 py-0.5 rounded text-xs font-mono text-red-600 dark:text-red-400">{children}</code>,
+                                  pre: ({children}) => <pre className="bg-gray-200 dark:bg-gray-800 p-3 rounded-lg overflow-x-auto mb-3 text-xs">{children}</pre>,
+                                  blockquote: ({children}) => <blockquote className="border-l-3 border-blue-500 pl-3 py-1 mb-3 bg-gray-100 dark:bg-gray-800 text-sm">{children}</blockquote>,
+                                  a: ({href, children}) => <a href={href} className="text-blue-600 dark:text-blue-400 hover:underline text-sm" target="_blank" rel="noopener noreferrer">{children}</a>
+                                }}
+                              >
+                                {content || '*在此处开始输入以查看预览...*'}
+                              </ReactMarkdown>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </form>
@@ -509,6 +618,70 @@ export default function AdminPage() {
           </div>
         )}
       </main>
+
+      {/* 链接插入模态框 */}
+      {showLinkModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">插入链接</h3>
+              <button
+                onClick={() => setShowLinkModal(false)}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  链接地址
+                </label>
+                <input
+                  type="text"
+                  value={linkText}
+                  onChange={(e) => setLinkText(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="https://example.com"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  显示文本 <span className="text-gray-400">(可选)</span>
+                </label>
+                <input
+                  type="text"
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="链接显示的文本"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowLinkModal(false)}
+                className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleInsertLink}
+                className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
+                disabled={!linkText}
+              >
+                插入
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
