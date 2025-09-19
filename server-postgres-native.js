@@ -26,17 +26,32 @@ const pool = new Pool({
 async function initializeDatabase() {
   const client = await pool.connect();
   try {
-    console.log('🔄 正在强制重建数据库架构...');
+    console.log('🔄 正在检查数据库架构...');
 
-    // 强制删除现有表并重建
-    console.log('⚠️ 强制重建数据库表...');
-    await client.query('DROP TABLE IF EXISTS posts CASCADE');
-    await client.query('DROP TABLE IF EXISTS users CASCADE');
+    // 检查表是否存在
+    const tablesExist = await client.query(`
+      SELECT table_name FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name IN ('users', 'posts')
+    `);
 
+    if (tablesExist.rows.length === 2) {
+      console.log('✅ 数据库表已存在，跳过重建');
+
+      // 验证表结构
+      const userCount = await client.query('SELECT COUNT(*) FROM users');
+      const postCount = await client.query('SELECT COUNT(*) FROM posts');
+      console.log(`📊 当前状态: ${userCount.rows[0].count} 用户, ${postCount.rows[0].count} 文章`);
+
+      return; // 表已存在，直接返回
+    }
+
+    console.log('⚠️ 数据库表不存在，开始创建...');
+
+    // 只有在表不存在时才创建
     // 创建用户表
     console.log('👤 创建用户表...');
     await client.query(`
-      CREATE TABLE users (
+      CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username VARCHAR(50) UNIQUE NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
@@ -50,7 +65,7 @@ async function initializeDatabase() {
     // 创建文章表
     console.log('📝 创建文章表...');
     await client.query(`
-      CREATE TABLE posts (
+      CREATE TABLE IF NOT EXISTS posts (
         id SERIAL PRIMARY KEY,
         title TEXT NOT NULL,
         slug VARCHAR(255) UNIQUE NOT NULL,
@@ -64,25 +79,28 @@ async function initializeDatabase() {
       )
     `);
 
-    console.log('🔧 初始化默认数据...');
+    // 检查是否需要初始化数据
+    const userCount = await client.query('SELECT COUNT(*) FROM users');
+    if (parseInt(userCount.rows[0].count) === 0) {
+      console.log('🔧 初始化默认数据...');
 
-    // 创建管理员用户
-    const hashedPassword = await bcrypt.hash('admin123456', 12);
-    const adminResult = await client.query(`
-      INSERT INTO users (username, email, password, role)
-      VALUES ($1, $2, $3, $4)
-      RETURNING id
-    `, ['yangzhen', 'yangzhen@example.com', hashedPassword, 'ADMIN']);
+      // 创建管理员用户
+      const hashedPassword = await bcrypt.hash('admin123456', 12);
+      const adminResult = await client.query(`
+        INSERT INTO users (username, email, password, role)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id
+      `, ['yangzhen', 'yangzhen@example.com', hashedPassword, 'ADMIN']);
 
-    const adminId = adminResult.rows[0].id;
-    console.log(`✅ 管理员用户创建完成 (ID: ${adminId})`);
+      const adminId = adminResult.rows[0].id;
+      console.log(`✅ 管理员用户创建完成 (ID: ${adminId})`);
 
-    // 创建默认文章
-    const posts = [
-      {
-        title: '欢迎来到 YangZhen 个人博客',
-        slug: 'welcome-to-yangzhen-blog',
-        content: `# 欢迎来到我的个人博客
+      // 创建默认文章
+      const posts = [
+        {
+          title: '欢迎来到 YangZhen 个人博客',
+          slug: 'welcome-to-yangzhen-blog',
+          content: `# 欢迎来到我的个人博客
 
 这是一个使用现代技术栈构建的个人博客网站。
 
@@ -105,12 +123,12 @@ async function initializeDatabase() {
 - 💾 PostgreSQL持久化数据存储
 
 感谢您的访问！`,
-        excerpt: '欢迎来到我的个人博客，这里分享我的技术学习心得和项目经验。'
-      },
-      {
-        title: '纪念一下，我用Claude Code完成了个人博客网站',
-        slug: 'claude-code-blog-journey',
-        content: `### **我的第一个个人博客诞生记**
+          excerpt: '欢迎来到我的个人博客，这里分享我的技术学习心得和项目经验。'
+        },
+        {
+          title: '纪念一下，我用Claude Code完成了个人博客网站',
+          slug: 'claude-code-blog-journey',
+          content: `### **我的第一个个人博客诞生记**
 
 我一直想拥有一个属于自己的小角落，用来记录生活点滴和天马行空的胡思乱想。终于下定决心要搭建个人博客，但问题是——我是个彻头彻尾的技术小白。
 
@@ -127,32 +145,24 @@ async function initializeDatabase() {
 - ✅ **数据永久保存**：再也不用担心文章丢失！
 
 这个博客现在真正成为了一个可靠的个人空间，支持企业级的数据持久化和高并发访问。`,
-        excerpt: '记录我使用Claude Code搭建个人博客的历程，从技术小白到完成PostgreSQL企业级升级的成长故事。'
-      }
-    ];
+          excerpt: '记录我使用Claude Code搭建个人博客的历程，从技术小白到完成PostgreSQL企业级升级的成长故事。'
+        }
+      ];
 
-    for (const post of posts) {
-      await client.query(`
-        INSERT INTO posts (title, slug, content, excerpt, author_id, views)
-        VALUES ($1, $2, $3, $4, $5, $6)
-      `, [post.title, post.slug, post.content, post.excerpt, adminId, 0]);
+      for (const post of posts) {
+        await client.query(`
+          INSERT INTO posts (title, slug, content, excerpt, author_id, views)
+          VALUES ($1, $2, $3, $4, $5, $6)
+        `, [post.title, post.slug, post.content, post.excerpt, adminId, 0]);
+      }
+
+      console.log(`✅ 创建了 ${posts.length} 篇默认文章`);
     }
 
-    console.log(`✅ 创建了 ${posts.length} 篇默认文章`);
-
     // 验证创建结果
-    const userCount = await client.query('SELECT COUNT(*) FROM users');
-    const postCount = await client.query('SELECT COUNT(*) FROM posts');
-    const testQuery = await client.query(`
-      SELECT p.title, u.username as author_name
-      FROM posts p
-      JOIN users u ON p.author_id = u.id
-      LIMIT 1
-    `);
-
-    console.log(`✅ 验证结果: ${userCount.rows[0].count} 用户, ${postCount.rows[0].count} 文章`);
-    console.log(`✅ 测试查询成功: ${testQuery.rows[0].title}`);
-    console.log('✅ 数据库初始化完成');
+    const finalUserCount = await client.query('SELECT COUNT(*) FROM users');
+    const finalPostCount = await client.query('SELECT COUNT(*) FROM posts');
+    console.log(`✅ 初始化完成: ${finalUserCount.rows[0].count} 用户, ${finalPostCount.rows[0].count} 文章`);
 
   } catch (error) {
     console.error('❌ 数据库初始化失败:', error);
