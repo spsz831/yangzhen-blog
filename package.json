@@ -2,10 +2,10 @@
   "name": "yangzhen-blog",
   "version": "1.0.0",
   "description": "YangZhen Personal Blog Backend - Railway Optimized",
-  "main": "server-postgres.js",
+  "main": "server-fixed.js",
   "scripts": {
-    "build": "npx prisma generate && npx prisma db push && node prisma/seed.js",
-    "start": "node server-postgres.js",
+    "build": "echo 'Build completed'",
+    "start": "node server-fixed.js",
     "start:postgres": "node server-postgres.js",
     "start:fixed": "node server-fixed.js",
     "start:persistent": "node server-persistent.js",
@@ -28,9 +28,7 @@
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "dotenv": "^16.3.1",
-    "express-validator": "^7.0.1",
-    "@prisma/client": "^5.7.1",
-    "prisma": "^5.7.1"
+    "express-validator": "^7.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
