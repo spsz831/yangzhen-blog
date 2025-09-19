@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 代码高亮样式 */
+@import 'highlight.js/styles/github.css';
+
 @layer base {
   html {
     font-family: system-ui, sans-serif;
@@ -15,4 +18,14 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
+}
+
+/* 自定义代码块样式 */
+.dark pre {
+  background-color: #1f2937 !important;
+}
+
+.dark code {
+  background-color: #374151 !important;
+  color: #f3f4f6 !important;
 }

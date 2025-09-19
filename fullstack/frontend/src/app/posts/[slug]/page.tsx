@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import Link from 'next/link'
 import { use } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeHighlight from 'rehype-highlight'
+import rehypeRaw from 'rehype-raw'
 
 interface Post {
   id: number
@@ -99,8 +103,29 @@ export default function PostPage({ params }: { params: Promise<{ slug: string }>
             </div>
           </header>
 
-          <div className="prose max-w-none">
-            <div dangerouslySetInnerHTML={{ __html: post.content.replace(/\n/g, '<br>') }} />
+          <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-li:text-gray-700 dark:prose-li:text-gray-300 prose-strong:text-gray-900 dark:prose-strong:text-gray-100">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeHighlight, rehypeRaw]}
+              components={{
+                // 自定义组件样式
+                h1: ({children}) => <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">{children}</h1>,
+                h2: ({children}) => <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-3 mt-6">{children}</h2>,
+                h3: ({children}) => <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2 mt-4">{children}</h3>,
+                p: ({children}) => <p className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">{children}</p>,
+                ul: ({children}) => <ul className="list-disc list-inside mb-4 space-y-2 text-gray-700 dark:text-gray-300">{children}</ul>,
+                ol: ({children}) => <ol className="list-decimal list-inside mb-4 space-y-2 text-gray-700 dark:text-gray-300">{children}</ol>,
+                li: ({children}) => <li className="text-gray-700 dark:text-gray-300">{children}</li>,
+                strong: ({children}) => <strong className="font-semibold text-gray-900 dark:text-gray-100">{children}</strong>,
+                em: ({children}) => <em className="italic text-gray-700 dark:text-gray-300">{children}</em>,
+                code: ({children}) => <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm font-mono text-red-600 dark:text-red-400">{children}</code>,
+                pre: ({children}) => <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto mb-4">{children}</pre>,
+                blockquote: ({children}) => <blockquote className="border-l-4 border-blue-500 pl-4 py-2 mb-4 bg-gray-50 dark:bg-gray-800">{children}</blockquote>,
+                a: ({href, children}) => <a href={href} className="text-blue-600 dark:text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>
+              }}
+            >
+              {post.content}
+            </ReactMarkdown>
           </div>
         </article>
 
