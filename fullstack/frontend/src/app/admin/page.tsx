@@ -28,6 +28,7 @@ export default function AdminPage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [editingPost, setEditingPost] = useState<Post | null>(null)
   const [activeTab, setActiveTab] = useState<'create' | 'manage'>('create')
+  const [contentTextarea, setContentTextarea] = useState<HTMLTextAreaElement | null>(null)
 
   useEffect(() => {
     // 检查登录状态
@@ -122,6 +123,92 @@ export default function AdminPage() {
     setMessage('')
   }
 
+  // Markdown编辑器功能函数
+  const insertMarkdown = (before: string, after: string = '', placeholder: string = '') => {
+    if (!contentTextarea) return
+
+    const start = contentTextarea.selectionStart
+    const end = contentTextarea.selectionEnd
+    const selectedText = content.substring(start, end)
+    const replacement = selectedText || placeholder
+
+    const newContent = content.substring(0, start) + before + replacement + after + content.substring(end)
+    setContent(newContent)
+
+    // 重新聚焦并设置光标位置
+    setTimeout(() => {
+      if (contentTextarea) {
+        contentTextarea.focus()
+        const newCursorPos = start + before.length + replacement.length
+        contentTextarea.setSelectionRange(newCursorPos, newCursorPos)
+      }
+    }, 0)
+  }
+
+  const insertHeading = (level: number) => {
+    const headingPrefix = '#'.repeat(level) + ' '
+    insertMarkdown(headingPrefix, '', `标题 ${level}`)
+  }
+
+  const toggleBold = () => {
+    insertMarkdown('**', '**', '粗体文本')
+  }
+
+  const toggleItalic = () => {
+    insertMarkdown('*', '*', '斜体文本')
+  }
+
+  const insertLink = () => {
+    insertMarkdown('[', '](url)', '链接文本')
+  }
+
+  const insertCode = () => {
+    insertMarkdown('`', '`', '代码')
+  }
+
+  const insertCodeBlock = () => {
+    insertMarkdown('```\n', '\n```', '代码块')
+  }
+
+  const insertList = () => {
+    insertMarkdown('- ', '', '列表项')
+  }
+
+  const insertNumberedList = () => {
+    insertMarkdown('1. ', '', '列表项')
+  }
+
+  const insertQuote = () => {
+    insertMarkdown('> ', '', '引用文本')
+  }
+
+  // 键盘快捷键处理
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key) {
+        case 'b':
+        case 'B':
+          e.preventDefault()
+          toggleBold()
+          break
+        case 'i':
+        case 'I':
+          e.preventDefault()
+          toggleItalic()
+          break
+        case 'k':
+        case 'K':
+          e.preventDefault()
+          insertLink()
+          break
+        case '`':
+          e.preventDefault()
+          insertCode()
+          break
+      }
+    }
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('auth_token')
     window.location.href = '/auth'
@@ -204,34 +291,54 @@ export default function AdminPage() {
           <div className="max-w-4xl mx-auto">
             {/* 编辑器工具栏 */}
             <div className="bg-white dark:bg-gray-800 rounded-t-lg border border-b-0 dark:border-gray-700 p-4">
-              <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
-                <div className="flex items-center space-x-2">
-                  <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
+              <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
+                {/* 标题下拉菜单 */}
+                <div className="relative group">
+                  <button className="flex items-center px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-xs font-medium">
+                    ⇩ 标题
                   </button>
-                  <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded font-bold">B</button>
-                  <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded italic">I</button>
-                  <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                    </svg>
-                  </button>
-                  <span className="text-gray-400">|</span>
-                  <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                    </svg>
-                  </button>
-                  <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6M9 16h6m2-8V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-2" />
-                    </svg>
-                  </button>
+                  <div className="absolute top-full left-0 mt-1 w-32 bg-white dark:bg-gray-800 border dark:border-gray-600 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                    <button onClick={() => insertHeading(1)} className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-xl font-bold">H1 标题 1</button>
+                    <button onClick={() => insertHeading(2)} className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-lg font-semibold">H2 标题 2</button>
+                    <button onClick={() => insertHeading(3)} className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-base font-medium">H3 标题 3</button>
+                    <button onClick={() => insertHeading(4)} className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium">H4 标题 4</button>
+                  </div>
                 </div>
-                <span className="text-gray-400">|</span>
-                <span>在此处输入，使用 Markdown、BBCode 或 HTML 进行格式化，插件或插入图片。</span>
+
+                <span className="text-gray-300 dark:text-gray-600">|</span>
+
+                {/* 格式化按钮 */}
+                <button onClick={toggleBold} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded font-bold text-sm" title="粗体 (Ctrl+B)">
+                  B
+                </button>
+                <button onClick={toggleItalic} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded italic text-sm" title="斜体 (Ctrl+I)">
+                  I
+                </button>
+                <button onClick={insertLink} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm" title="插入链接">
+                  🔗
+                </button>
+                <button onClick={insertCode} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm font-mono" title="行内代码">
+                  {'</>'}
+                </button>
+                <button onClick={insertCodeBlock} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm" title="代码块">
+                  💻
+                </button>
+
+                <span className="text-gray-300 dark:text-gray-600">|</span>
+
+                {/* 列表按钮 */}
+                <button onClick={insertList} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm" title="无序列表">
+                  •
+                </button>
+                <button onClick={insertNumberedList} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm" title="有序列表">
+                  1.
+                </button>
+                <button onClick={insertQuote} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm" title="引用">
+                  ❝
+                </button>
+
+                <span className="text-gray-300 dark:text-gray-600 ml-4">|</span>
+                <span className="text-xs">支持 Markdown 格式化语法</span>
               </div>
             </div>
 
@@ -298,11 +405,13 @@ export default function AdminPage() {
                   </label>
                   <div className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
                     <textarea
+                      ref={setContentTextarea}
                       value={content}
                       onChange={(e) => setContent(e.target.value)}
+                      onKeyDown={handleKeyDown}
                       className="w-full px-4 py-4 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 border-0 focus:outline-none focus:ring-0 resize-none font-mono text-sm leading-relaxed"
                       rows={20}
-                      placeholder="在此处输入文章内容，支持 Markdown 格式..."
+                      placeholder="在此处输入文章内容，支持 Markdown 格式...&#10;快捷键: Ctrl+B (粗体), Ctrl+I (斜体), Ctrl+K (链接), Ctrl+` (代码)"
                       required
                     />
                   </div>
