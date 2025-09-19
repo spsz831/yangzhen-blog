@@ -307,6 +307,7 @@ app.get('/api/posts', async (req, res) => {
 
     const postsWithDetails = posts.rows.map(post => ({
       ...post,
+      createdAt: post.created_at, // 确保前端能正确读取时间
       author: {
         id: post.author_id,
         username: post.author_name
@@ -361,6 +362,7 @@ app.get('/api/posts/:slug', async (req, res) => {
     const post = result.rows[0];
     const postWithDetails = {
       ...post,
+      createdAt: post.created_at, // 确保前端能正确读取时间
       views: post.views + 1,
       author: {
         id: post.author_id,

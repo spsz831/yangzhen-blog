@@ -152,8 +152,12 @@ export default function Home() {
                   <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">{post.excerpt}</p>
                   <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                     <div>
-                      {post.author && <span>作者: {post.author.username} • </span>}
-                      <time>{new Date(post.createdAt).toLocaleDateString('zh-CN')}</time>
+                      {post.author && <span>作者: {post.author.username === 'yangzhen' ? '杨振' : post.author.username} • </span>}
+                      <time>{post.createdAt ? new Date(post.createdAt).toLocaleDateString('zh-CN', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      }) : '未知时间'}</time>
                     </div>
                     <Link
                       href={`/posts/${post.slug}`}

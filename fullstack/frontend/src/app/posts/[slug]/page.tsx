@@ -87,9 +87,15 @@ export default function PostPage({ params }: { params: Promise<{ slug: string }>
             <h1 className="text-3xl font-bold text-gray-900 mb-4">{post.title}</h1>
             <div className="flex items-center text-gray-600 text-sm">
               {post.author && (
-                <span>作者: {post.author.username} • </span>
+                <span>作者: {post.author.username === 'yangzhen' ? '杨振' : post.author.username} • </span>
               )}
-              <time>{new Date(post.createdAt).toLocaleDateString('zh-CN')}</time>
+              <time>{post.createdAt ? new Date(post.createdAt).toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              }) : '未知时间'}</time>
             </div>
           </header>
 
