@@ -7,13 +7,16 @@ const { Client, Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 3005;
 
-// CORS配置 - 支持新旧域名
+// CORS配置 - 支持新域名 yz.x10.mx
 const corsOptions = {
   origin: [
-    'https://yangzhen-blog.vercel.app',           // 新域名
-    'https://yangzhen-blog-railway.vercel.app',  // 旧域名 (向后兼容)
-    'http://localhost:3000',                     // 本地开发
-    'http://localhost:3001'                      // 本地开发备用
+    'https://yz.x10.mx',                         // 新主域名
+    'https://www.yz.x10.mx',                    // www子域名
+    'https://admin.yz.x10.mx',                  // 管理后台子域名
+    'https://yangzhen-blog.vercel.app',         // Vercel域名 (备用)
+    'https://yangzhen-blog-railway.vercel.app', // 旧域名 (兼容)
+    'http://localhost:3000',                    // 本地开发
+    'http://localhost:3001'                     // 本地开发备用
   ],
   credentials: true,
   optionsSuccessStatus: 200
